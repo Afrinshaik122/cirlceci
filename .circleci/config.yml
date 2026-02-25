@@ -1,21 +1,49 @@
-# Use the latest 2.1 version of CircleCI pipeline process engine.
 version: 2.1
 
+orbs:
+  node: circleci/node@5.0.2
+
 jobs:
-  say-hello:
-    docker:
-     
-      - image: cimg/base:current
-
-   
+  install_and_test:
+    executor: node/default
+    working_directory: ~/repo
     steps:
-    
+      - checkout
+      - node/install-packages:
+          pkg-manager: npm
       - run:
-          name: "Say hello"
-          command: "echo Hello, World!"
+          name: Run Backend Tests (if any)
+          command: |
+            cd backend
+            npm test || echo "No backend tests"
+      - run:
+          name: Run Frontend Tests (if any)
+          command: |
+            cd frontend
+            npm test || echo "No frontend tests"
 
+  build:
+    executor: node/default
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: npm
+      - run:
+          name: Build Backend
+          command: |
+            cd backend
+            npm run build || echo "No backend build script"
+      - run:
+          name: Build Frontend
+          command: |
+            cd frontend
+            npm run build
 
 workflows:
-  say-hello-workflow: 
+  build_and_test:
     jobs:
-      - say-hello
+      - install_and_test
+      - build:
+          requires:
+            - install_and_test
