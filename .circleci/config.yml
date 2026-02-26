@@ -61,3 +61,6 @@ workflows:
           requires:
             - backend_ci
             - frontend_ci
+          filters:
+            branches:
+              only: production
